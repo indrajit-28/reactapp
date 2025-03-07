@@ -1,0 +1,33 @@
+name: Frontend Deployment
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  frontend:
+    runs-on: frontend  # This uses the runner labeled 'frontend'
+
+    steps:
+      - name: Set up SSH key for GitHub Actions
+        run: |
+          if [ ! -d "$HOME/.ssh" ]; then mkdir -p ~/.ssh; fi
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa1
+          sudo chown -R $USER:$USER ~/.ssh
+          sudo chmod 600 ~/.ssh/id_rsa1
+          sudo chmod 700 ~/.ssh
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+      - name: Set up Node.js 
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+
+      - name: Pull and Deploy Frontend
+        working-directory: /var/www/reactapp/client
+        run: |
+          echo "Pulling latest code for frontend"
+          git pull origin master
+          
+          npm -f install &&
+          npm run build  
