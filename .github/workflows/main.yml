@@ -1,7 +1,7 @@
 name: Frontend Deployment
 
 on:
-  push:
+  push: 
     branches:
       - master
 
