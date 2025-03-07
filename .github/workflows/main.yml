@@ -31,4 +31,7 @@ jobs:
           git pull origin master
           
           npm -f install &&
-          npm run build  
+          npm run build 
+            echo "Using rsync for atomic deployment"
+            rsync -av --delete ./build/ /var/www/html/temp_build/
+            mv /var/www/html/temp_build /var/www/reactapp/client/build
