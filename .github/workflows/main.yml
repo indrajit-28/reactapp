@@ -18,6 +18,7 @@ jobs:
           sudo chmod 600 ~/.ssh/id_rsa1
           sudo chmod 700 ~/.ssh
           ssh-keyscan github.com >> ~/.ssh/known_hosts
+          node -v
       - name: Set up Node.js 
         uses: actions/setup-node@v3
         with:
