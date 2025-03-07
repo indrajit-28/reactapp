@@ -34,6 +34,7 @@ jobs:
       - name: Build frontend in the temporary directory
         run: |
           TEMP_BUILD_DIR="/var/www/reactapp/client/temp_repo/build"
+          mkdir $TEMP_BUILD_DIR
           echo "Building frontend in a temporary directory"
           cd /var/www/reactapp/client/temp_repo
           npm install
