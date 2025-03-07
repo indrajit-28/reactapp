@@ -18,7 +18,6 @@ jobs:
           sudo chmod 600 ~/.ssh/id_rsa1
           sudo chmod 700 ~/.ssh
           ssh-keyscan github.com >> ~/.ssh/known_hosts
-
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -28,12 +27,10 @@ jobs:
         run: |
           # Clone the repo to a temporary directory
           git clone https://github.com/${{ github.repository }} /var/www/reactapp/client/temp_repo
-
       - name: Pull latest code for frontend in the temp directory
         run: |
           cd /var/www/reactapp/client/temp_repo
           git pull origin master
-
       - name: Build frontend in the temporary directory
         run: |
           TEMP_BUILD_DIR="/var/www/reactapp/client/temp_repo/build"
@@ -41,14 +38,11 @@ jobs:
           cd /var/www/reactapp/client/temp_repo
           npm install
           npm run build
-
       - name: Rsync build to production directory
         run: |
           # Only move the build if successful
           rsync -av --delete /var/www/reactapp/client/temp_repo/build/ /var/www/reactapp/client/build/
-
       - name: Clean up temporary directory
         run: |
           # Clean up the temporary directory after deployment
           rm -rf /var/www/reactapp/client/temp_repo
-
