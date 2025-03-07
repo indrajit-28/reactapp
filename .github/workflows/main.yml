@@ -12,38 +12,45 @@ jobs:
     steps:
       - name: Set up SSH key for GitHub Actions
         run: |
+          # Set up SSH key for authentication
           if [ ! -d "$HOME/.ssh" ]; then mkdir -p ~/.ssh; fi
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa1
-          sudo chown -R $USER:$USER ~/.ssh
-          sudo chmod 600 ~/.ssh/id_rsa1
-          sudo chmod 700 ~/.ssh
+          chmod 600 ~/.ssh/id_rsa1
           ssh-keyscan github.com >> ~/.ssh/known_hosts
+          # Test SSH connection using rsa1
+          ssh -i ~/.ssh/id_rsa1 -T git@github.com
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'
 
-      - name: Clone repository into a temporary directory
+      - name: Use default GitHub Actions directory
         run: |
-          # Clone the repo to a temporary directory
-          git clone https://github.com/${{ github.repository }} /var/www/reactapp/client/temp_repo
-      - name: Pull latest code for frontend in the temp directory
+          # Print the default directory where the repository is cloned
+          echo "Default directory for GitHub Actions clone: /home/runner/work/${{ github.repository }}/${{ github.repository }}"
+          
+          # Move to the default repository directory
+          cd /home/runner/work/${{ github.repository }}/${{ github.repository }}
+
+      - name: Pull latest code for frontend in the default directory
         run: |
-          cd /var/www/reactapp/client/temp_repo
+          # Pull the latest code (it should be already there)
           git pull origin master
-      - name: Build frontend in the temporary directory
+
+      - name: Build frontend in the default directory
         run: |
-          TEMP_BUILD_DIR="/var/www/reactapp/client/temp_repo/build"
-          mkdir $TEMP_BUILD_DIR
-          echo "Building frontend in a temporary directory"
-          cd /var/www/reactapp/client/temp_repo
+          # Move to the default directory and install dependencies
+          cd /home/runner/work/${{ github.repository }}/${{ github.repository }}
           npm install
           npm run build
+
       - name: Rsync build to production directory
         run: |
-          # Only move the build if successful
-          rsync -av --delete /var/www/reactapp/client/temp_repo/build/ /var/www/reactapp/client/build/
-      - name: Clean up temporary directory
+          # Rsync the build to the production directory
+          rsync -av --delete /home/runner/work/${{ github.repository }}/${{ github.repository }}/build/ /var/www/reactapp/client/build/
+
+      - name: Clean up temporary build files
         run: |
-          # Clean up the temporary directory after deployment
-          rm -rf /var/www/reactapp/client/temp_repo
+          # Clean up any temporary build files if necessary
+          rm -rf /home/runner/work/${{ github.repository }}/${{ github.repository }}/build
