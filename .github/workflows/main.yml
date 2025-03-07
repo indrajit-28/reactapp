@@ -9,6 +9,8 @@ jobs:
   frontend:
     runs-on: [self-hosted, react]
 
+    
+
     steps:
       - name: Set up SSH key for GitHub Actions
         run: |
@@ -23,6 +25,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Use default GitHub Actions directory
         run: |
