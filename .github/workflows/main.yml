@@ -24,40 +24,31 @@ jobs:
         with:
           node-version: '18.x'
 
-      - name: Backup current node_modules and build directory
+      - name: Clone repository into a temporary directory
         run: |
-          # Backup the current node_modules directory to temp
-          mv /var/www/reactapp/client/node_modules /var/www/reactapp/client/node_modules_backup || true
-          # Backup the current build directory to temp
-          mv /var/www/reactapp/client/build /var/www/reactapp/client/build_backup || true
+          # Clone the repo to a temporary directory
+          git clone https://github.com/${{ github.repository }} /var/www/reactapp/client/temp_repo
 
-      - name: Pull latest code for frontend
-        working-directory: /var/www/reactapp/client
+      - name: Pull latest code for frontend in the temp directory
         run: |
-          echo "Pulling latest code for frontend"
+          cd /var/www/reactapp/client/temp_repo
           git pull origin master
 
-      - name: Build frontend in a temporary directory
-        working-directory: /var/www/reactapp/client
+      - name: Build frontend in the temporary directory
         run: |
-          TEMP_BUILD_DIR="/var/www/reactapp/client/temp_build"
+          TEMP_BUILD_DIR="/var/www/reactapp/client/temp_repo/build"
           echo "Building frontend in a temporary directory"
-          # Create a temporary directory for building
-          mkdir -p $TEMP_BUILD_DIR
-          mv /var/www/reactapp/client/node_modules_backup /var/www/reactapp/client/node_modules
+          cd /var/www/reactapp/client/temp_repo
           npm install
           npm run build
 
-      - name: Move build to production directory
+      - name: Rsync build to production directory
         run: |
           # Only move the build if successful
-          rsync -av --delete /var/www/reactapp/client/temp_build/build/ /var/www/reactapp/client/build/
-          # Clean up
-          rm -rf /var/www/reactapp/client/temp_build
+          rsync -av --delete /var/www/reactapp/client/temp_repo/build/ /var/www/reactapp/client/build/
 
-      - name: Restore original node_modules if needed
+      - name: Clean up temporary directory
         run: |
-          # If any issue occurs, restore the original node_modules
-          if [ -d "/var/www/reactapp/client/node_modules_backup" ]; then
-            mv /var/www/reactapp/client/node_modules_backup /var/www/reactapp/client/node_modules
-          fi
+          # Clean up the temporary directory after deployment
+          rm -rf /var/www/reactapp/client/temp_repo
+
