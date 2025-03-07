@@ -7,9 +7,10 @@ on:
 
 jobs:
   frontend:
-    runs-on: react  # This uses the runner labeled 'frontend'
+    runs-on: [self-hosted, react]  # Ensure your runner is labeled 'react'
 
     steps:
+      # Stage 1: Set up SSH and Node.js
       - name: Set up SSH key for GitHub Actions
         run: |
           if [ ! -d "$HOME/.ssh" ]; then mkdir -p ~/.ssh; fi
@@ -25,31 +26,37 @@ jobs:
         with:
           node-version: '18.x'
 
-      - name: Pull and Deploy Frontend
+      # Stage 2: Install dependencies (without building)
+      - name: Install dependencies
         working-directory: /var/www/reactapp/client
         run: |
-          echo "Pulling latest code for frontend"
-          git pull origin master
-          
-          # Install dependencies
-          npm install --force
+          echo "Pulling latest code and installing dependencies"
+          git pull origin master  # Ensure latest code
+          npm install --force  # Install dependencies, but skip building
 
-          # Create build in a temporary directory
-          echo "Building the frontend application"
-          npm run build
-
-          echo "Using rsync for atomic deployment"
+      # Stage 3: Build the frontend in a temporary directory
+      - name: Build frontend in a temporary directory
+        working-directory: /var/www/reactapp/client
+        run: |
           TEMP_BUILD_DIR="/var/www/html/temp_build"
-          
-          # Sync build files to the temporary directory
-          rsync -av --delete ./build/ $TEMP_BUILD_DIR/
+          echo "Building frontend in a temporary directory"
+          mkdir -p $TEMP_BUILD_DIR
+          npm run build --output-path=$TEMP_BUILD_DIR  # Build to the temp directory
+          ls $TEMP_BUILD_DIR  # Optional: list the files in the temp build directory
 
-          # Ensure the old build is not deleted until the new build is completely ready
-          echo "Switching to the new build"
-          mv $TEMP_BUILD_DIR /var/www/reactapp/client/build
+      # Stage 4: Move the built project to the live directory
+      - name: Move build to live directory
+        run: |
+          LIVE_BUILD_DIR="/var/www/reactapp/client/build"
+          TEMP_BUILD_DIR="/var/www/html/temp_build"
 
-          # Set correct permissions for the new build
-          sudo chown -R www-data:www-data /var/www/reactapp/client/build
-          sudo chmod -R 755 /var/www/reactapp/client/build
-
-          echo "Deployment complete! The new build is now live."
+          echo "Switching the build to the live directory atomically"
+          if [ -d "$TEMP_BUILD_DIR" ]; then
+            # Atomic move: Rename the temp directory to the live build directory
+            mv $TEMP_BUILD_DIR $LIVE_BUILD_DIR
+            sudo chown -R www-data:www-data $LIVE_BUILD_DIR
+            sudo chmod -R 755 $LIVE_BUILD_DIR
+            echo "Deployment complete! The new build is now live."
+          else
+            echo "No build found in temp directory, skipping live deployment."
+          fi
