@@ -7,7 +7,7 @@ on:
 
 jobs:
   frontend:
-    runs-on: frontend  # This uses the runner labeled 'frontend'
+    runs-on: react  # This uses the runner labeled 'frontend'
 
     steps:
       - name: Set up SSH key for GitHub Actions
