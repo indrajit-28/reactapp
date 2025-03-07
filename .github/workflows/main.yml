@@ -24,11 +24,6 @@ jobs:
         with:
           node-version: '18.x'
 
-      - name: Pull latest code for frontend in the default directory
-        run: |
-          # Pull the latest code (it should be already there)
-          git pull origin master
-
       - name: Use default GitHub Actions directory
         run: |
           # Print the default directory where the repository is cloned
@@ -36,6 +31,13 @@ jobs:
           
           # Move to the default repository directory
           cd /home/runner/work/${{ github.repository }}/${{ github.repository }}
+
+      - name: Pull latest code for frontend in the default directory
+        run: |
+          # Pull the latest code (it should be already there)
+          git pull origin master
+
+      
 
       
 
