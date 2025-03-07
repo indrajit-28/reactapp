@@ -1,5 +1,5 @@
 name: Frontend Deployment
- 
+
 on:
   push:
     branches:
@@ -19,7 +19,8 @@ jobs:
           sudo chmod 700 ~/.ssh
           ssh-keyscan github.com >> ~/.ssh/known_hosts
           node -v
-      - name: Set up Node.js 
+
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'
@@ -30,8 +31,25 @@ jobs:
           echo "Pulling latest code for frontend"
           git pull origin master
           
-          npm -f install &&
-          npm run build 
-            echo "Using rsync for atomic deployment"
-            rsync -av --delete ./build/ /var/www/html/temp_build/
-            mv /var/www/html/temp_build /var/www/reactapp/client/build
+          # Install dependencies
+          npm install --force
+
+          # Create build in a temporary directory
+          echo "Building the frontend application"
+          npm run build
+
+          echo "Using rsync for atomic deployment"
+          TEMP_BUILD_DIR="/var/www/html/temp_build"
+          
+          # Sync build files to the temporary directory
+          rsync -av --delete ./build/ $TEMP_BUILD_DIR/
+
+          # Ensure the old build is not deleted until the new build is completely ready
+          echo "Switching to the new build"
+          mv $TEMP_BUILD_DIR /var/www/reactapp/client/build
+
+          # Set correct permissions for the new build
+          sudo chown -R www-data:www-data /var/www/reactapp/client/build
+          sudo chmod -R 755 /var/www/reactapp/client/build
+
+          echo "Deployment complete! The new build is now live."
