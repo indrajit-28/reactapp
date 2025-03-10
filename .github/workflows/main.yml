@@ -29,7 +29,7 @@ jobs:
           node-version: '18.x'
 
       - name: Print GitHub Workspace Path
-        run: echo "Workspace Path: $GITHUB_WORKSPACE"
+        run: echo "Workspace Path:$GITHUB_WORKSPACE"
 
       - name: Check package.json location
         run: |
