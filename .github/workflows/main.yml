@@ -9,54 +9,37 @@ jobs:
   frontend:
     runs-on: [self-hosted, react]
 
-    
-
     steps:
       - name: Set up SSH key for GitHub Actions
         run: |
-          # Set up SSH key for authentication
-          if [ ! -d "$HOME/.ssh" ]; then mkdir -p ~/.ssh; fi 
+          mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa1
           chmod 600 ~/.ssh/id_rsa1
           ssh-keyscan github.com >> ~/.ssh/known_hosts
-          
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'
-      
 
       - name: Use default GitHub Actions directory
         run: |
-          # Print the default directory where the repository is cloned
-          echo "Default directory for GitHub Actions clone: /home/runner/work/${{ github.repository }}/${{ github.repository }}"
-          
-          # Move to the default repository directory
-          cd /home/runner/work/${{ github.repository }}/${{ github.repository }}
+          echo "Default directory: $GITHUB_WORKSPACE"
+          ls -la $GITHUB_WORKSPACE
 
-      - name: Pull latest code for frontend in the default directory
+      - name: Build frontend
         run: |
-          # Pull the latest code (it should be already there)
-          git pull origin master
-
-      
-
-      
-
-      - name: Build frontend in the default directory
-        run: |
-          # Move to the default directory and install dependencies
-          cd /home/runner/work/${{ github.repository }}/${{ github.repository }}
+          cd $GITHUB_WORKSPACE
           npm install
           npm run build
 
       - name: Rsync build to production directory
         run: |
-          # Rsync the build to the production directory
-          rsync -av --delete /home/runner/work/${{ github.repository }}/${{ github.repository }}/build/ /var/www/reactapp/client/build/
+          rsync -av --delete $GITHUB_WORKSPACE/build/ /var/www/reactapp/client/build/
 
       - name: Clean up temporary build files
         run: |
-          # Clean up any temporary build files if necessary
-          rm -rf /home/runner/work/${{ github.repository }}/${{ github.repository }}/build
+          rm -rf $GITHUB_WORKSPACE/build
