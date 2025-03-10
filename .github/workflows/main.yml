@@ -13,33 +13,37 @@ jobs:
       - name: Set up SSH key for GitHub Actions
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa1
-          chmod 600 ~/.ssh/id_rsa1
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
           ssh-keyscan github.com >> ~/.ssh/known_hosts
 
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Verify Repository Clone
+        run: ls -la $GITHUB_WORKSPACE
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'
 
-      - name: Use default GitHub Actions directory
-        run: |
-          echo "Default directory: $GITHUB_WORKSPACE"
-          ls -la $GITHUB_WORKSPACE
+      - name: Print GitHub Workspace Path
+        run: echo "Workspace Path: $GITHUB_WORKSPACE"
 
-      - name: Build frontend
+      - name: Check package.json location
         run: |
-          cd $GITHUB_WORKSPACE
+          if [ ! -f "$GITHUB_WORKSPACE/client/package.json" ]; then
+            echo "Error: package.json not found in $GITHUB_WORKSPACE/client"
+            exit 1
+          fi
+
+      - name: Install Dependencies & Build
+        working-directory: client
+        run: |
           npm install
           npm run build
 
-      - name: Rsync build to production directory
+      - name: Deploy to Production
         run: |
-          rsync -av --delete $GITHUB_WORKSPACE/build/ /var/www/reactapp/client/build/
-
-      - name: Clean up temporary build files
-        run: |
-          rm -rf $GITHUB_WORKSPACE/build
+          rsync -av --delete $GITHUB_WORKSPACE/client/build/ /var/www/reactapp/client/build/
