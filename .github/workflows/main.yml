@@ -15,7 +15,7 @@ jobs:
       - name: Set up SSH key for GitHub Actions
         run: |
           # Set up SSH key for authentication
-          if [ ! -d "$HOME/.ssh" ]; then mkdir -p ~/.ssh; fi
+          if [ ! -d "$HOME/.ssh" ]; then mkdir -p ~/.ssh; fi 
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa1
           chmod 600 ~/.ssh/id_rsa1
           ssh-keyscan github.com >> ~/.ssh/known_hosts
