@@ -47,3 +47,10 @@ jobs:
       - name: Deploy to Production
         run: |
           rsync -av --delete $GITHUB_WORKSPACE/client/build/ /var/www/reactapp/client/build/
+
+      - name: Cleanup Workspace
+        run: |
+          echo "Cleaning up workspace..."
+          rm -rf $GITHUB_WORKSPACE/*
+          echo "Workspace cleaned successfully!"
+
